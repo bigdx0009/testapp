@@ -67,6 +67,7 @@ app.post('/signup', (req, res) => {
 		confirmPassword: req.body.confirmPassword,
 		handle: req.body.handle,
 	};
+let token, userId;
 
 db.doc(`/users/${newUser.handle}`).get()
 	.then(doc => {
@@ -79,10 +80,21 @@ db.doc(`/users/${newUser.handle}`).get()
 		}
 })
 	.then(data => {
-	return data.user.getIdToken();
+		userId = data.user.uid;
+		return data.user.getIdToken();
 })
 	.then(token => {
-	return res.status(201).json({ token });
+		token = token
+		const userCredentials = {
+			handle: newUser.handle,
+			email: newUser.email,
+			createdAt: new Date().toISOString(),
+			userId
+		};
+		return db.doc(`/users/${newUser.handle}`).set(userCredentials);
+})
+.then((data) => {
+	return res.status(201).json
 })
 	.catch(err => {
 		console.error(err);
